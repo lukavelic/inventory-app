@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 const Category = require("./db/models/category");
 const Item = require("./db/models/item");
+const User = require("./db/models/user");
+
+// bcrypt
+const saltRounds = 10;
 
 exports.category = async (req, res) => {
     console.log("hit category", req.params);
@@ -21,20 +26,33 @@ exports.category = async (req, res) => {
 
 exports.register = async (req, res) => {
     console.log("hit register", req.body);
-    res.status(200).send({ msg: "Success" });
 
-    // const user = new User({
-    //     username: req.params.category,
-    //     password
-    // });
+    bcrypt.genSalt(saltRounds, (err, salt) => {
+        bcrypt.hash(req.body.password, salt, (err, hash) => {
+            if (err) {
+                res.status(500).send({ msg: "Error hashing password", err });
+            }
 
-    // category.save()
-    //     .then((result) => {
-    //         res.status(200).send({ msg: 'Category created', result })
-    //     })
-    //     .catch((err) => {
-    //         res.status(500).send({ msg: 'Error creating category', err })
-    //     })
+            const user = new User({
+                username: req.body.username,
+                password: hash,
+            });
+
+            user.save()
+                .then((result) => {
+                    res.status(201).send({
+                        msg: "User successfully created!",
+                        result,
+                    });
+                })
+                .catch((err) => {
+                    res.status(500).send({
+                        msg: "Error creating user",
+                        err,
+                    });
+                });
+        });
+    });
 };
 
 exports.login = async (req, res) => {
