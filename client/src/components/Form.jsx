@@ -23,7 +23,7 @@ export const Form = (props) => {
         } else {
             console.log(" hit login");
             axios
-                .post("/login", { data })
+                .post("/login", data)
                 .then((res) => console.log(res))
                 .catch((err) => console.log(err));
         }

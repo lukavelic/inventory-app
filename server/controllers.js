@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const Category = require("./db/models/category");
 const Item = require("./db/models/item");
 const User = require("./db/models/user");
@@ -57,5 +58,35 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
     console.log("hit login", req.body);
-    res.status(200).send({ msg: "Success" });
+
+    User.findOne({ username: req.body.username })
+        .then((user) => {
+            bcrypt.compare(req.body.password, user.password, (err, result) => {
+                if (err) {
+                    res.status(401).send({
+                        msg: "Passwords do not match",
+                        err,
+                    });
+                } else {
+                    const token = jwt.sign(
+                        {
+                            userId: user._id,
+                            username: user.username,
+                        },
+                        "RANDOM-TOKEN",
+                        { expiresIn: "30 days" }
+                    );
+
+                    res.status(200).send({
+                        msg: "Login successful",
+                        username: user.username,
+                        userId: user._id,
+                        token,
+                    });
+                }
+            });
+        })
+        .catch((err) => {
+            res.status(404).send({ msg: "Username not found", err });
+        });
 };
