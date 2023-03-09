@@ -28,32 +28,51 @@ exports.category = async (req, res) => {
 exports.register = async (req, res) => {
     console.log("hit register", req.body);
 
-    bcrypt.genSalt(saltRounds, (err, salt) => {
-        bcrypt.hash(req.body.password, salt, (err, hash) => {
-            if (err) {
-                res.status(500).send({ msg: "Error hashing password", err });
-            }
+    User.findOne({
+        username: req.body.username,
+    })
+        .then((result) => {
+            if (result) {
+                res.status(208).send({
+                    msg: "Username is taken",
+                    result,
+                });
+            } else {
+                bcrypt.genSalt(saltRounds, (err, salt) => {
+                    bcrypt.hash(req.body.password, salt, (err, hash) => {
+                        if (err) {
+                            res.status(500).send({
+                                msg: "Error hashing password",
+                                err,
+                            });
+                        }
 
-            const user = new User({
-                username: req.body.username,
-                password: hash,
-            });
+                        const user = new User({
+                            username: req.body.username,
+                            password: hash,
+                        });
 
-            user.save()
-                .then((result) => {
-                    res.status(201).send({
-                        msg: "User successfully created!",
-                        result,
-                    });
-                })
-                .catch((err) => {
-                    res.status(500).send({
-                        msg: "Error creating user",
-                        err,
+                        user.save()
+                            .then((result) => {
+                                res.status(201).send({
+                                    msg: "User successfully created!",
+                                    result,
+                                });
+                            })
+                            .catch((err) => {
+                                console.log({ err });
+                                res.status(500).send({
+                                    msg: "Error creating user",
+                                    err,
+                                });
+                            });
                     });
                 });
+            }
+        })
+        .catch((err) => {
+            res.status(500).send({ err });
         });
-    });
 };
 
 exports.login = async (req, res) => {
