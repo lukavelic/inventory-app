@@ -92,7 +92,7 @@ exports.login = async (req, res) => {
                             userId: user._id,
                             username: user.username,
                         },
-                        "RANDOM-TOKEN",
+                        process.env.privateKey,
                         { expiresIn: "30 days" }
                     );
 
@@ -108,4 +108,20 @@ exports.login = async (req, res) => {
         .catch((err) => {
             res.status(404).send({ msg: "Username not found", err });
         });
+};
+
+exports.dashboard = async (req, res) => {
+    console.log("hit dashboard");
+
+    const token = req.headers.authorization.slice(7);
+
+    try {
+        const tokenData = jwt.verify(token, process.env.privateKey);
+        res.status(200).send({ msg: "You can view this page" });
+    } catch (err) {
+        res.status(401).send({
+            msg: "You are not authorized to view this page",
+            err,
+        });
+    }
 };
