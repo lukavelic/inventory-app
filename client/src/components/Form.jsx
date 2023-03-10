@@ -1,10 +1,7 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
-
-// TO BE CHANGED FOR PROD
-
-axios.defaults.baseURL = "http://localhost:5000/";
+import { useCookies } from "react-cookie";
 
 export const Form = (props) => {
     const {
@@ -12,6 +9,8 @@ export const Form = (props) => {
         handleSubmit,
         formState: { errors },
     } = useForm();
+
+    const [cookies, setCookie, removeCookie] = useCookies(["token"]);
 
     const onSubmit = (data) => {
         if (props.type === "register") {
@@ -23,8 +22,13 @@ export const Form = (props) => {
         } else {
             console.log(" hit login");
             axios
-                .post("/login", { data })
-                .then((res) => console.log(res))
+                .post("/login", data)
+                .then((res) => {
+                    if (res.status === 200) {
+                        console.log(res);
+                        setCookie("token", res.data.token);
+                    }
+                })
                 .catch((err) => console.log(err));
         }
     };

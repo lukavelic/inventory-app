@@ -5,6 +5,7 @@ import "./styles/main.css";
 import Root from "./routes/root";
 import { Dashboard } from "./routes/dashboard";
 import ErrorPage from "./error-page";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const router = createBrowserRouter([
     {
@@ -14,7 +15,11 @@ const router = createBrowserRouter([
     },
     {
         path: "/dashboard",
-        element: <Dashboard />,
+        element: (
+            <ProtectedRoute route="/dashboard">
+                <Dashboard></Dashboard>
+            </ProtectedRoute>
+        ),
     },
 ]);
 
