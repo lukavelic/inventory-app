@@ -80,33 +80,53 @@ exports.login = async (req, res) => {
 
     User.findOne({ username: req.body.username })
         .then((user) => {
-            bcrypt.compare(req.body.password, user.password, (err, result) => {
-                if (err) {
-                    res.status(401).send({
-                        msg: "Passwords do not match",
-                        err,
-                    });
-                } else {
-                    const token = jwt.sign(
-                        {
-                            userId: user._id,
-                            username: user.username,
-                        },
-                        process.env.privateKey,
-                        { expiresIn: "30 days" }
-                    );
+            if (user) {
+                bcrypt.compare(
+                    req.body.password,
+                    user.password,
+                    (err, result) => {
+                        console.log("bcrypt compare");
+                        console.log(result);
+                        console.log(err);
+                        if (result === true) {
+                            console.log("true - passwords match");
+                            const token = jwt.sign(
+                                {
+                                    userId: user._id,
+                                    username: user.username,
+                                },
+                                process.env.privateKey,
+                                { expiresIn: "30 days" }
+                            );
 
-                    res.status(200).send({
-                        msg: "Login successful",
-                        username: user.username,
-                        userId: user._id,
-                        token,
-                    });
-                }
-            });
+                            res.status(200).send({
+                                msg: "Login successful",
+                                username: user.username,
+                                userId: user._id,
+                                token,
+                            });
+                        } else {
+                            console.log("else - passwords do not match");
+                            res.status(401).send({
+                                msg: "Username/Password is incorrect",
+                                err,
+                            });
+                        }
+                    }
+                );
+                // .catch((err) => {
+                //     console.log("err 500");
+                //     res.status(500).send({
+                //         msg: "Could not hash password",
+                //         err,
+                //     });
+                // });
+            } else {
+                res.status(401).send({ msg: "Username/Password is incorrect" });
+            }
         })
         .catch((err) => {
-            res.status(404).send({ msg: "Username not found", err });
+            res.status(500).send({ msg: "Could not access database", err });
         });
 };
 

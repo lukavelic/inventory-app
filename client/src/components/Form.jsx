@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import { useCookies } from "react-cookie";
@@ -10,10 +10,13 @@ export const Form = (props) => {
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm();
 
     const [cookies, setCookie, removeCookie] = useCookies(["token"]);
+
+    const [invalidError, setInvalidError] = useState(false);
 
     const onSubmit = (data) => {
         if (props.type === "register") {
@@ -25,40 +28,53 @@ export const Form = (props) => {
                 .catch((err) => console.log(err));
         } else {
             console.log(" hit login");
-            props.handleClose();
             axios
                 .post("/login", data)
                 .then((res) => {
                     if (res.status === 200) {
                         console.log(res);
                         setCookie("token", res.data.token);
+                        props.handleClose();
                     }
                 })
-                .catch((err) => console.log(err));
+                .catch((err) => {
+                    setInvalidError(true);
+                    setValue("username", "");
+                    setValue("password", "");
+                    console.log(err);
+                });
         }
     };
 
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col m-4 gap-4"
+            className="flex flex-col items-center m-4 gap-4"
         >
             <TextField
                 color="secondary"
-                error={errors.username}
+                error={errors.username || invalidError}
+                id="username-input"
                 label="Username"
                 variant="outlined"
                 {...register("username", { required: true })}
             />
             <TextField
                 color="secondary"
-                error={errors.password}
+                error={errors.password || invalidError}
+                id="password-input"
                 label="Password"
                 type="password"
                 variant="outlined"
                 {...register("password", { required: true })}
             />
-            <Button color="secondary" variant="contained" type="submit">
+            {invalidError && <span>Username/Password invalid</span>}
+            <Button
+                className="w-full"
+                color="secondary"
+                variant="contained"
+                type="submit"
+            >
                 {props.type == "register" ? "Register" : "Login"}
             </Button>
         </form>
